@@ -9,10 +9,17 @@ $TTL 86400
 
 @       IN  NS      {{ master_hostname }}.{{ dns_domain }}.
 
+; Nameserver address record
+{{ "%-15s"|format(master_hostname) }} IN  A       {{ dns_server_ip }}
+
+; A records
 {% for record in dns_a_records %}
+{% if record.name != master_hostname %}
 {{ "%-15s"|format(record.name) }} IN  A       {{ record.ip }}
+{% endif %}
 {% endfor %}
 
+; CNAME records
 {% for record in dns_cname_records %}
 {{ "%-15s"|format(record.name) }} IN  CNAME   {{ record.target }}.{{ dns_domain }}.
 {% endfor %}

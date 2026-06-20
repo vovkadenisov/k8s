@@ -110,6 +110,14 @@
     group: nogroup
     mode: "0777"
 
+- name: Create NFS exports.d directory
+  ansible.builtin.file:
+    path: /etc/exports.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Render NFS exports config
   ansible.builtin.template:
     src: nfs.exports.j2
