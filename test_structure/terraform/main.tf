@@ -1,7 +1,7 @@
 provider "proxmox" {
   endpoint  = var.proxmox_endpoint
   api_token = var.proxmox_api_token
-  insecure = true # в проде нужен норм tls
+  insecure  = true # в проде нужен норм tls
 }
 
 resource "proxmox_virtual_environment_vm" "master" {
