@@ -2,7 +2,8 @@
 #### готовим template под dns/nfs (debian 12)
 cd /var/lib/vz/template/iso
 wget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2
-
+!!!!!!!! поставить qemu-agent
+```
 qm create 1000 \
   --name debian-12-cloudinit-template \
   --memory 1024 \
@@ -21,8 +22,9 @@ qm set 1000 --serial0 socket --vga serial0
 qm resize 1000 scsi0 20G
 
 qm template 1000
-
+```
 #### готовим темплейт под k8s
+!!!!!!!! поставить qemu-agent
 ```
 cd /var/lib/vz/template/iso
 
