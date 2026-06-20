@@ -1,0 +1,26 @@
+acl "trusted" {
+    127.0.0.1;
+    {{ dns_lan_cidr }};
+};
+
+options {
+    directory "/var/cache/bind";
+
+    listen-on port 53 { any; };
+    listen-on-v6 { none; };
+
+    recursion yes;
+    allow-recursion { trusted; };
+    allow-query { trusted; };
+    allow-query-cache { trusted; };
+
+    forwarders {
+{% for forwarder in dns_forwarders %}
+        {{ forwarder }};
+{% endfor %}
+    };
+
+    dnssec-validation auto;
+
+    auth-nxdomain no;
+};

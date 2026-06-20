@@ -1,0 +1,18 @@
+$TTL 86400
+@   IN  SOA {{ master_hostname }}.{{ dns_domain }}. vladimir.onikdam.biz. (
+        {{ dns_zone_serial }} ; Serial
+        3600                 ; Refresh
+        1800                 ; Retry
+        604800               ; Expire
+        86400                ; Minimum TTL
+)
+
+@       IN  NS      {{ master_hostname }}.{{ dns_domain }}.
+
+{% for record in dns_a_records %}
+{{ "%-15s"|format(record.name) }} IN  A       {{ record.ip }}
+{% endfor %}
+
+{% for record in dns_cname_records %}
+{{ "%-15s"|format(record.name) }} IN  CNAME   {{ record.target }}.{{ dns_domain }}.
+{% endfor %}

@@ -32,7 +32,7 @@ resource "proxmox_virtual_environment_vm" "master" {
   }
 
   agent {
-    enabled = false
+    enabled = true
   }
 
   operating_system {

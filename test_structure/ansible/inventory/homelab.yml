@@ -1,0 +1,8 @@
+all:
+  children:
+    master:
+      hosts:
+        master.onikdam.local:
+          ansible_host: 192.168.1.180
+          ansible_user: onikdam
+          ansible_ssh_private_key_file: ~/.ssh/id_rsa

@@ -1,0 +1,6 @@
+---
+- name: Configure master DNS + NFS server
+  hosts: master
+  become: true
+  roles:
+    - master_dns_nfs

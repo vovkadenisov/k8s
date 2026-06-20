@@ -1,0 +1,19 @@
+---
+master_hostname: master
+
+dns_domain: onikdam.local
+dns_server_ip: 192.168.1.180
+dns_lan_cidr: 192.168.1.0/24
+dns_reverse_zone: 1.168.192.in-addr.arpa
+dns_zone_serial: 2026062001
+
+dns_forwarders:
+  - 1.1.1.1
+  - 8.8.8.8
+
+dns_a_records: []
+dns_cname_records: []
+
+nfs_export_root: /srv/nfs
+nfs_k8s_export_path: /srv/nfs/k8s
+nfs_allowed_cidr: 192.168.1.0/24

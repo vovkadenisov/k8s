@@ -1,0 +1,54 @@
+---
+master_hostname: master
+dns_domanin: onikdam.local
+dns_server_ip: 192.168.1.180
+dns_lan_cidr: 192.168.1.0/24
+dns_reverse_zone: 1.168.192.in-addr.arpa
+
+dns_forwarders:
+  - 1.1.1.1
+  - 8.8.8.8
+
+dns_zone_serial: 2026062001
+
+dns_a_records:
+  - name: master
+    ip: 192.168.1.180
+
+  - name: control1
+    ip: 192.168.1.181
+
+  - name: control2
+    ip: 192.168.1.182
+
+  - name: control3
+    ip: 192.168.1.183
+
+  - name: worker1
+    ip: 192.168.1.184
+
+  - name: worker2
+    ip: 192.168.1.185
+
+  - name: worker3
+    ip: 192.168.1.186
+
+  - name: db1
+    ip: 192.168.1.187
+
+  - name: kubeapi
+    ip: 192.168.1.189
+
+  - name: metallb
+    ip: 192.168.1.190
+
+dns_cname_records:
+  - name: argocd
+    target: metallb
+
+  - name: keycloak
+    target: metallb
+
+nfs_export_root: /srv/nfs
+nfs_k8s_export_path: /srv/nfs/k8s
+nfs_allowed_cidr: 192.168.1.0/24
