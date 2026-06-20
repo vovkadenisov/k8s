@@ -5,4 +5,45 @@ all:
         master.onikdam.local:
           ansible_host: 192.168.1.180
           ansible_user: onikdam
-          ansible_ssh_private_key_file: ~/.ssh/id_rsa
+          ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+
+    k8s_control_plane:
+      hosts:
+        control1.onikdam.local:
+          ansible_host: 192.168.1.181
+          ansible_user: onikdam
+          ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+          k8s_node_ip: 192.168.1.181
+        control2.onikdam.local:
+          ansible_host: 192.168.1.182
+          ansible_user: onikdam
+          ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+          k8s_node_ip: 192.168.1.182
+        control3.onikdam.local:
+          ansible_host: 192.168.1.183
+          ansible_user: onikdam
+          ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+          k8s_node_ip: 192.168.1.183
+
+    k8s_workers:
+      hosts:
+        worker1.onikdam.local:
+          ansible_host: 192.168.1.184
+          ansible_user: onikdam
+          ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+          k8s_node_ip: 192.168.1.184
+        worker2.onikdam.local:
+          ansible_host: 192.168.1.185
+          ansible_user: onikdam
+          ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+          k8s_node_ip: 192.168.1.185
+        worker3.onikdam.local:
+          ansible_host: 192.168.1.186
+          ansible_user: onikdam
+          ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+          k8s_node_ip: 192.168.1.186
+
+    k8s_cluster:
+      children:
+        k8s_control_plane:
+        k8s_workers:
