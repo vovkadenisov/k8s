@@ -22,6 +22,31 @@ qm resize 1000 scsi0 20G
 
 qm template 1000
 
+#### готовим темплейт под k8s
+```
+cd /var/lib/vz/template/iso
+
+wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+
+qm create 1001 \
+  --name ubuntu-2404-cloudinit-template \
+  --memory 2048 \
+  --cores 2 \
+  --net0 virtio,bridge=vmbr0 \
+  --ostype l26 \
+  --scsihw virtio-scsi-pci
+
+qm importdisk 1001 noble-server-cloudimg-amd64.img local-lvm
+
+qm set 1001 --scsi0 local-lvm:vm-1001-disk-0
+qm set 1001 --ide2 local-lvm:cloudinit
+qm set 1001 --boot c --bootdisk scsi0
+qm set 1001 --serial0 socket --vga serial0
+qm set 1001 --agent enabled=1
+qm resize 1001 scsi0 30G
+
+qm template 1001
+```
 ### разворачиваем через terraform
 ##### установка на mac
 ```
