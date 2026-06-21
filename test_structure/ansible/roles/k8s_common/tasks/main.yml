@@ -105,6 +105,27 @@
   ansible.builtin.command: sysctl --system
   changed_when: false
 
+- name: Ensure systemd-resolved drop-in dir exists
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure persistent DNS for lab domain
+  ansible.builtin.copy:
+    dest: /etc/systemd/resolved.conf.d/onikdam-local.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Resolve]
+      DNS={{ lab_dns_server }}
+      Domains=~{{ lab_dns_domain }}
+      MulticastDNS=no
+  notify: Restart systemd-resolved
+
 - name: Install containerd
   ansible.builtin.apt:
     name:

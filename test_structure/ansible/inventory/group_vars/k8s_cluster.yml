@@ -17,3 +17,6 @@ containerd_socket: "unix:///run/containerd/containerd.sock"
 calico_version: "v3.32.0"
 
 first_control_node: "control1.onikdam.local"
+
+lab_dns_server: "192.168.1.180"
+lab_dns_domain: "onikdam.local"

@@ -9,7 +9,7 @@ dns_forwarders:
   - 1.1.1.1
   - 8.8.8.8
 
-dns_zone_serial: 2026062001
+dns_zone_serial: 2026062101
 
 dns_a_records:
   - name: master
