@@ -7,6 +7,10 @@ all:
           ansible_user: onikdam
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519
 
+    k8s_first_control:
+      hosts:
+        control1.onikdam.local:
+
     k8s_control_plane:
       hosts:
         control1.onikdam.local:

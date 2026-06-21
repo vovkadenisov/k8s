@@ -1,0 +1,50 @@
+---
+- name: Install Calico CRDs
+  ansible.builtin.command: >
+    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/v1_crd_projectcalico_org.yaml
+  become_user: "{{ ansible_user }}"
+  register: calico_crds
+  failed_when:
+    - calico_crds.rc != 0
+    - "'AlreadyExists' not in calico_crds.stderr"
+  changed_when: "'created' in calico_crds.stdout"
+
+- name: Install Tigera operator
+  ansible.builtin.command: >
+    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/tigera-operator.yaml
+  become_user: "{{ ansible_user }}"
+  register: tigera_operator
+  failed_when:
+    - tigera_operator.rc != 0
+    - "'AlreadyExists' not in tigera_operator.stderr"
+  changed_when: "'created' in tigera_operator.stdout"
+
+- name: Render Calico custom resources
+  ansible.builtin.template:
+    src: calico-custom-resources.yaml.j2
+    dest: /etc/kubernetes/calico-custom-resources.yaml
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Apply Calico custom resources
+  ansible.builtin.command: kubectl apply -f /etc/kubernetes/calico-custom-resources.yaml
+  become_user: "{{ ansible_user }}"
+  register: calico_apply
+  changed_when: "'configured' in calico_apply.stdout or 'created' in calico_apply.stdout"
+
+- name: Wait for Calico tigerastatus
+  ansible.builtin.shell: |
+    set -e
+    for i in $(seq 1 60); do
+      kubectl get tigerastatus >/dev/null 2>&1 && exit 0
+      sleep 5
+    done
+    exit 1
+  become_user: "{{ ansible_user }}"
+  changed_when: false
+
+- name: Show Calico status
+  ansible.builtin.command: kubectl get tigerastatus
+  become_user: "{{ ansible_user }}"
+  changed_when: false

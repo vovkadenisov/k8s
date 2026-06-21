@@ -1,0 +1,33 @@
+---
+- name: Check if node already joined as control-plane
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet_conf
+
+- name: Join node as additional control-plane
+  ansible.builtin.command: "{{ hostvars[first_control_node].control_plane_join_command }} --apiserver-advertise-address {{ k8s_node_ip }} --cri-socket {{ containerd_socket }}"
+  when: not kubelet_conf.stat.exists
+  register: join_control_result
+
+- name: Print control-plane join output
+  ansible.builtin.debug:
+    var: join_control_result.stdout_lines
+  when: join_control_result is defined and join_control_result.stdout_lines is defined
+
+- name: Create kube config dir for user
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: Copy admin kubeconfig for user
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+  when: kubelet_conf.stat.exists or join_control_result is succeeded

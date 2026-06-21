@@ -1,0 +1,23 @@
+---
+- name: Check Kubernetes cluster
+  hosts: k8s_first_control
+  become: true
+  tasks:
+    - name: Get nodes
+      ansible.builtin.command: kubectl get nodes -o wide
+      become_user: "{{ ansible_user }}"
+      changed_when: false
+
+    - name: Get all pods
+      ansible.builtin.command: kubectl get pods -A -o wide
+      become_user: "{{ ansible_user }}"
+      changed_when: false
+
+    - name: Check kube-proxy config mode
+      ansible.builtin.shell: kubectl -n kube-system get cm kube-proxy -o yaml | grep -A5 'mode:'
+      become_user: "{{ ansible_user }}"
+      changed_when: false
+
+    - name: Check IPVS rules on first control node
+      ansible.builtin.command: ipvsadm -Ln
+      changed_when: false

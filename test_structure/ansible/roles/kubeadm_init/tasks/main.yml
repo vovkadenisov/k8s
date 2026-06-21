@@ -1,0 +1,104 @@
+---
+- name: Ensure /etc/kubernetes exists
+  ansible.builtin.file:
+    path: /etc/kubernetes
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Render kubeadm init config
+  ansible.builtin.template:
+    src: kubeadm-init.yaml.j2
+    dest: /etc/kubernetes/kubeadm-config.yaml
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Check if cluster already initialized
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: kubeadm_admin_conf
+
+- name: Validate kubeadm config
+  ansible.builtin.command: kubeadm config validate --config /etc/kubernetes/kubeadm-config.yaml
+  changed_when: false
+  when: not kubeadm_admin_conf.stat.exists
+
+- name: Pull Kubernetes control-plane images
+  ansible.builtin.command: kubeadm config images pull --config /etc/kubernetes/kubeadm-config.yaml
+  changed_when: false
+  when: not kubeadm_admin_conf.stat.exists
+
+- name: Initialize Kubernetes control-plane
+  ansible.builtin.command: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml --upload-certs
+  register: kubeadm_init_result
+  when: not kubeadm_admin_conf.stat.exists
+
+- name: Print kubeadm init output
+  ansible.builtin.debug:
+    var: kubeadm_init_result.stdout_lines
+  when: kubeadm_init_result is defined and kubeadm_init_result.stdout_lines is defined
+
+- name: Create kube config dir for user
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: Copy admin kubeconfig for user
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+  when: not ansible_check_mode
+
+- name: Enable kubectl completion for bash
+  ansible.builtin.lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "source <(kubectl completion bash)"
+    state: present
+    create: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  when: not ansible_check_mode
+
+- name: Create fresh worker join command
+  ansible.builtin.command: kubeadm token create --print-join-command
+  register: worker_join_command
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Upload certs and get certificate key
+  ansible.builtin.shell: kubeadm init phase upload-certs --upload-certs | tail -1
+  register: certificate_key
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Get CA cert hash
+  ansible.builtin.shell: |
+    openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt \
+      | openssl rsa -pubin -outform der 2>/dev/null \
+      | openssl dgst -sha256 -hex \
+      | sed 's/^.* //'
+  register: ca_cert_hash
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Save join artifacts locally on control1
+  ansible.builtin.copy:
+    dest: /etc/kubernetes/join-artifacts.env
+    owner: root
+    group: root
+    mode: "0600"
+    content: |
+      WORKER_JOIN_COMMAND="{{ worker_join_command.stdout }}"
+      CERTIFICATE_KEY="{{ certificate_key.stdout }}"
+      CA_CERT_HASH="{{ ca_cert_hash.stdout }}"
+      CONTROL_PLANE_ENDPOINT="{{ k8s_control_endpoint | default('') }}"
+  when: not ansible_check_mode

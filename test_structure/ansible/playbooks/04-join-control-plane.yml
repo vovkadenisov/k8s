@@ -1,0 +1,24 @@
+---
+- name: Generate fresh control-plane join data on first control node
+  hosts: k8s_first_control
+  become: true
+  tasks:
+    - name: Create worker join command
+      ansible.builtin.command: kubeadm token create --print-join-command
+      register: worker_join_command
+      changed_when: false
+
+    - name: Upload certs and get certificate key
+      ansible.builtin.shell: kubeadm init phase upload-certs --upload-certs | tail -1
+      register: certificate_key
+      changed_when: false
+
+    - name: Save join facts
+      ansible.builtin.set_fact:
+        control_plane_join_command: "{{ worker_join_command.stdout }} --control-plane --certificate-key {{ certificate_key.stdout }}"
+
+- name: Join additional control-plane nodes
+  hosts: k8s_control_plane:!k8s_first_control
+  become: true
+  roles:
+    - kubeadm_join_control

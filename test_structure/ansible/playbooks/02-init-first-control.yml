@@ -1,0 +1,6 @@
+---
+- name: Initialize first Kubernetes control-plane node
+  hosts: k8s_first_control
+  become: true
+  roles:
+    - kubeadm_init

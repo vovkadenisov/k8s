@@ -1,0 +1,57 @@
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: "{{ k8s_node_ip }}"
+  bindPort: 6443
+nodeRegistration:
+  name: "{{ inventory_hostname }}"
+  criSocket: "{{ containerd_socket }}"
+  imagePullPolicy: IfNotPresent
+  taints:
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+---
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+clusterName: "{{ k8s_cluster_name }}"
+kubernetesVersion: "{{ kubernetes_version }}"
+{% if k8s_control_endpoint is defined %}
+controlPlaneEndpoint: "{{ k8s_control_endpoint }}"
+{% endif %}imageRepository: "registry.k8s.io"
+certificatesDir: /etc/kubernetes/pki
+networking:
+  dnsDomain: "{{ k8s_dns_domain }}"
+  podSubnet: "{{ k8s_pod_subnet }}"
+  serviceSubnet: "{{ k8s_service_subnet }}"
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+apiServer:
+  extraArgs:
+    - name: authorization-mode
+      value: Node,RBAC
+    - name: bind-address
+      value: 0.0.0.0
+    - name: service-cluster-ip-range
+      value: "{{ k8s_service_subnet }}"
+    - name: service-node-port-range
+      value: "30000-32767"
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
+clusterCIDR: "{{ k8s_pod_subnet }}"
+ipvs:
+  strictARP: true
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+clusterDNS:
+  - "{{ k8s_service_dns_ip }}"
+systemReserved:
+  memory: 512Mi
+  cpu: 500m
+  ephemeral-storage: 2Gi
+containerLogMaxSize: 1Mi
+containerLogMaxFiles: 3
+cgroupDriver: systemd
